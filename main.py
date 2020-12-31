@@ -23,6 +23,7 @@ class Apontamento:
 		time.sleep(5)
 
 		status = threading.Thread(target=self.status_t)
+		status.start()
 
 	def status_t(self):
 		while True:
