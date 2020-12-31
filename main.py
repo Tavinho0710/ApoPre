@@ -27,7 +27,10 @@ class Apontamento:
 
 	def status_t(self):
 		while True:
-			self.lcd.write_line('Teste 1', 1, 0, 0)
+			self.lcd.write_line('Teste 1', 0, 0, 0)
+			self.lcd.write_line('Teste 2', 0, 0, 0)
+			self.lcd.write_line('Teste 3', 0, 0, 0)
+			self.lcd.write_line('Teste 4', 0, 0, 0)
 			time.sleep(3)
 
 
