@@ -16,7 +16,7 @@ class Apontamento:
 		database = self.cp.get('sistema', 'database')
 		user = self.cp.get('sistema', 'user')
 		pwd = self.cp.get('sistema', 'password')
-		self.db = Database()
+		self.db = Database(database, user, pwd)
 		time.sleep(5)
 
 
