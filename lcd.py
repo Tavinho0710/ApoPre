@@ -4,6 +4,8 @@ import i2clcd
 
 
 class Lcd:
+
+	# Se type=1, apaga o visor inteiro pra mostrar a mensagem
 	def write_line(self,text, line, type, duration):
 		self.fila_espera.append([text, line, type, duration])
 
