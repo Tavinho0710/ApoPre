@@ -13,7 +13,7 @@ class Apontamento:
 
 		self.cp.read('config.ini')
 		mode = self.cp.get('modo', 'modo')
-		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level=mode)
+		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level="DEBUG")
 		logging.info('Inicializando')
 
 		database = self.cp.get('sistema', 'database')
