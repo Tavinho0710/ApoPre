@@ -11,7 +11,7 @@ class Database:
 		pass
 
 	def __init__(self, database, user, password, mode):
-		logging.basicConfig(filename='db.log', encoding='utf-8', level=mode)
+		logging.basicConfig(filename='db.log', level=mode)
 		conn = pyodbc.connect(
 			'DSN={0};UID={1};PWD={2}'.format(database, user, password), timeout=1)
 		cursor = conn.cursor()
