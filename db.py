@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 import pyodbc
 
@@ -9,10 +10,13 @@ class Database:
 	def service(self):
 		pass
 
-	def __init__(self, database, user, password):
+	def __init__(self, database, user, password, mode):
+		logging.basicConfig(filename='db.log', encoding='utf-8', level=mode)
 		conn = pyodbc.connect(
 			'DSN={0};UID={1};PWD={2}'.format(database, user, password), timeout=1)
 		cursor = conn.cursor()
 		cursor.execute('Select * from usu_tetiqbag')
+		logging.info('Banco de dados iniciado')
 		for row in cursor.fetchall():
 			print(row)
+

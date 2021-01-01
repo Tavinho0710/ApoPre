@@ -8,18 +8,20 @@ from db import Database
 
 class Apontamento:
 	def __init__(self):
-		logging.info('Inicializando')
-		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level=logging.DEBUG)
-
 		self.lcd = Lcd()
 		self.cp = configparser.ConfigParser()
 
 		self.cp.read('config.ini')
+		mode = self.cp.get('modo', 'modo')
+		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level=mode)
+		logging.info('Inicializando')
+
 		database = self.cp.get('sistema', 'database')
 		user = self.cp.get('sistema', 'user')
 		pwd = self.cp.get('sistema', 'password')
 
-		self.db = Database(database, user, pwd)
+		logging.info('Incialização da base de dados')
+		self.db = Database(database, user, pwd, mode)
 		time.sleep(5)
 
 		status = threading.Thread(target=self.status_t)
