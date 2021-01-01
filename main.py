@@ -12,8 +12,8 @@ class Apontamento:
 		self.cp = configparser.ConfigParser()
 
 		self.cp.read('config.ini')
-		mode = self.cp.get('modo', 'modo')
-		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level="DEBUG")
+		mode = int(self.cp.get('modo', 'modo'))
+		logging.basicConfig(filename='apontamento.log', encoding='utf-8', level='DEBUG')
 		logging.info('Inicializando')
 
 		database = self.cp.get('sistema', 'database')
