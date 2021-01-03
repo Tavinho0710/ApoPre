@@ -28,6 +28,7 @@ class Lcd:
 		self.lcd = i2clcd.i2clcd(i2c_bus=1, i2c_addr=0x27, lcd_width=20)
 		self.lcd.init()
 		self.lcd.print_line('Inicializando', line=0)
+		self.lcd.print_line('Aguarde', line=1)
 		time.sleep(3)
 		fila = threading.Thread(target=self.fila_t)
 		fila.start()

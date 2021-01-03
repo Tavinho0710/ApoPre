@@ -10,24 +10,27 @@ class Apontamento:
 	def __init__(self):
 		self.lcd = Lcd()
 		self.cp = configparser.ConfigParser()
-
+		
 		self.cp.read('config.ini')
 		mode = int(self.cp.get('modo', 'modo'))
-		logging.basicConfig(filename='apontamento.log', level=mode)
-
+		logging.basicConfig(filename='apontamento.log',
+		                    level=mode,
+		                    format='%(asctime)s %(levelname)s %(message)s',
+		                    datefmt='%d/%m/%Y %H:%M:%S')
+		
 		logging.info('Inicializando')
-
+		
 		database = self.cp.get('sistema', 'database')
 		user = self.cp.get('sistema', 'user')
 		pwd = self.cp.get('sistema', 'password')
-
+		
 		logging.info('Incialização da base de dados')
-
+		
 		self.db = Database(database, user, pwd, mode)
 		time.sleep(5)
-
+		
 		logging.info('Carregando dados de apontamento')
-
+		
 		self.codemp = self.cp.get('apontamento', 'codemp')
 		self.codfil = self.cp.get('apontamento', 'codfil')
 		self.codope = self.cp.get('apontamento', 'codope')
@@ -35,10 +38,15 @@ class Apontamento:
 		self.numorp = self.cp.get('apontamento', 'numorp')
 		self.qtdprv = self.cp.get('apontamento', 'qtdprv')
 		self.qtdfrd = self.cp.get('apontamento', 'qtdfrd')
-
+		
 		status = threading.Thread(target=self.status_t)
 		status.start()
-
+		
+		logging.info('Início da leitura do código de barras')
+		
+		while True:
+			pass
+	
 	def status_t(self):
 		while True:
 			self.lcd.write_line('OP: '
