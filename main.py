@@ -26,7 +26,7 @@ class Apontamento:
 		
 		logging.info('Incialização da base de dados')
 		
-		self.db = Database(database, user, pwd, mode)
+		self.db = Database(database, user, pwd)
 		time.sleep(5)
 		
 		logging.info('Carregando dados de apontamento')
@@ -57,7 +57,7 @@ class Apontamento:
 			                    + 'Ult: 0', 0, 0, 0)
 			self.lcd.write_line('Teste 2', 1, 0, 0)
 			self.lcd.write_line('Teste 3', 2, 0, 0)
-			self.lcd.write_line('Teste 4', 3, 0, 0)
+			self.lcd.write_line('C:'+('S' if self.db.get_status() else 'N'), 3, 0, 0)
 			time.sleep(3)
 
 
