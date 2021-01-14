@@ -77,7 +77,7 @@ class Apontamento:
 	def status_t(self):
 		while True:
 			self.lcd.write_line('OP: '
-			                    + self.numorp
+			                    + str(self.numorp)
 			                    + ' '
 			                    + '/'
 			                    + ' '
