@@ -23,7 +23,7 @@ class Database:
 		
 	def service_t(self):
 		self.local = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
-		self.local_cursor = self.local.cursor()
+		self.local_ursor = self.local.cursor()
 		self.create_table()
 		self.start_db()
 		while True:
