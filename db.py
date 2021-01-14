@@ -9,7 +9,7 @@ from datetime import datetime
 class Database:
 	def insert_entry(self, codemp, codfil, codope, codori, numorp, codbar, cont, cel):
 		datapo = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-		query = 'select * from usu_tetiqbag where usu_codbar = {0}'.format(codbar)
+		query = "select * from usu_tetiqbag where usu_codbar = '{0}'".format(codbar)
 		if self.get_status():
 			rs = self.conexao_cursor.execute(query)
 			if rs:
