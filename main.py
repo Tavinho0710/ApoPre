@@ -4,7 +4,7 @@ import configparser
 import logging
 import sys
 from datetime import datetime
-from lcd import Lcd
+from lcd2 import Lcd
 from db import Database
 
 
@@ -45,6 +45,8 @@ class Apontamento:
 		self.qtdprv = int(self.cp.get('apontamento', 'qtdprv'))
 		self.qtdfrd = int(self.cp.get('apontamento', 'qtdfrd'))
 		
+		self.last_codbar = 0
+		
 		status = threading.Thread(target=self.status_t)
 		status.start()
 		
@@ -55,7 +57,7 @@ class Apontamento:
 			logging.debug('Cod. Barras lido: {0}'.format(codbar))
 			if len(codbar) == 10:
 				op, contcel = codbar.split('-')
-				cont, cel = int(contcel[0:3]), int(contcel[-1])
+				cont, cel = int(contcel[0:4]), int(contcel[-1])
 				op = int(op)
 				
 				if self.numorp == op:
@@ -70,19 +72,16 @@ class Apontamento:
 					if result == 0:
 						self.lcd.write_line('Já apontado', 0, 1, 2)
 					if result == 1:
-						pass
+						self.last_codbar = codbar
 			elif len(codbar) == 24:
 				nova_op = int(codbar[2:11])
+			else:
+				self.lcd.write_line('Não reconhecido', 0, 1, 2)
 	
 	def status_t(self):
 		while True:
-			self.lcd.write_line('OP: '
-			                    + str(self.numorp)
-			                    + ' '
-			                    + '/'
-			                    + ' '
-			                    + 'Ult: 0', 0, 0, 0)
-			self.lcd.write_line('Teste 2', 1, 0, 0)
+			self.lcd.write_line('OP: ' + str(self.numorp), 0, 0, 0)
+			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
 			self.lcd.write_line('Teste 3', 2, 0, 0)
 			self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
 			time.sleep(3)
