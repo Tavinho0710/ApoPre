@@ -74,7 +74,7 @@ class Apontamento:
 					                              cont,
 					                              cel)
 					if result == 0:
-						self.lcd.write_line('Já apontado', 0, 1, 2)
+						self.lcd.write_line('Ja apontado', 0, 1, 2)
 					if result == 1:
 						self.last_codbar = codbar
 						self.lcd.write_line('Apontado', 0, 1, 1)
@@ -110,11 +110,11 @@ class Apontamento:
 					else:
 						self.lcd.write_line('Erro OP', 0, 1, 2)
 			else:
-				self.lcd.write_line('Não reconhecido', 0, 1, 2)
+				self.lcd.write_line('Nao reconhecido', 0, 1, 2)
 	
 	def status_t(self):
 		while True:
-			self.lcd.write_line('OP:{0}'.format(str(self.numorp)), 0, 0, 0)
+			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
 			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
 			self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
 			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
