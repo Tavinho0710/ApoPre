@@ -106,7 +106,7 @@ class Apontamento:
 						self.config_update('apontamento', 'numorp', op)
 						self.config_update('apontamento', 'qtdfrd', fardo)
 						self.config_update('apontamento', 'qtdprv', qtdprv)
-						self.lcd.write_line('Nova OP: ' + str(op))
+						self.lcd.write_line('Nova OP: ' + str(op), 0, 1, 2)
 					else:
 						self.lcd.write_line('Erro OP', 0, 1, 2)
 			else:
