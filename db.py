@@ -9,10 +9,11 @@ from datetime import datetime
 class Database:
 	def insert_entry(self, codemp, codfil, codope, codori, numorp, codbar, cont, cel):
 		datapo = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-		query = "select * from usu_tetiqbag where usu_codbar = '{0}'".format(codbar)
+		query = "select * from usu_tetiqbag where usu_numorp = '{0}' and usu_seqbar = {1}".format(numorp, cont)
 		rs = None
 		if self.get_status():
-			rs = self.conexao_cursor.execute(query).fetchall()
+			with self.lock:
+				rs = self.conexao_cursor.execute(query).fetchall()
 			if rs:
 				print(rs)
 			else:
@@ -45,10 +46,47 @@ class Database:
 	
 	def get_status(self):
 		if self.conexao:
-			return False
+			return True
 		else:
 			return False
 	
+	def get_qtdapo(self):
+		return self.qtdapo
+	
+	def get_newop(self, op):
+		query = "SELECT numorp, qtdprv FROM e900cop WHERE CodEmp = 1 AND CodOri = '04' AND NumOrp" \
+		        "= {0}".format(op)
+		rs = None
+		try:
+			with self.lock:
+				rs = self.conexao_cursor.execute(query).fetchone()
+		except Exception as e:
+			logging.error('Problema ao obter nova OP: ' + str(e))
+			self.conexao = None
+			return None, None, None
+		if rs:
+			query = """
+					SELECT QtdEmb FROM e900qdo, e075der
+					where e900qdo.CodEmp = e075der.CodEmp
+					and e900qdo.CodPro = e075der.CodPro
+					and e900qdo.CodDer = e075der.CodDer
+					and e900qdo.CodEmp = 1
+					and e900qdo.CodOri = '04'
+					and e900qdo.NumOrp = {0}
+					""".format(op)
+			try:
+				with self.lock:
+					qtde_fardo = list(self.conexao_cursor.execute(query).fetchone())
+					
+			except Exception as e:
+				logging.error('Problema ao alterar OP: ' + str(e))
+				self.conexao = None
+				return None, None, None
+			return rs[0], int(rs[1]), int(qtde_fardo[0])
+		else:
+			logging.warning('Nenhuma OP encontrada')
+			return None, None, None
+				
 	def service_t(self):
 		self.local = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
 		self.local_cursor = self.local.cursor()
@@ -85,12 +123,11 @@ class Database:
 					try:
 						self.conexao_cursor.execute(query)
 						self.conexao.commit()
-						query = "update table usu_tetiqbag " \
+						query = "update usu_tetiqbag " \
 						        "set usu_sitapo = 1 " \
 						        "where usu_codbar = '{0}'".format(r[5])
 						self.local_cursor.execute(query)
 						self.local.commit()
-					
 					except pyodbc.IntegrityError:
 						query = "select * from usu_tetiqbag where usu_codbar = '{}'".format(r[5])
 						rs = self.conexao.execute(query).fetchall()
@@ -99,6 +136,13 @@ class Database:
 						logging.warning('Apontamento detectado: ' + str(r))
 					except Exception as e:
 						logging.error('Problema ao sincronizar bases: ' + str(e) + type(e).__name__)
+						self.conexao = None
+						
+					query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
+					try:
+						self.qtdapo = len(self.conexao_cursor.execute(query).fetchall())
+					except Exception as e:
+						logging.error('Não é possível obter quantidade: ' + str(e) + type(e).__name__)
 						self.conexao = None
 			else:
 				time.sleep(2)
@@ -137,6 +181,8 @@ class Database:
 		self.local.commit()
 	
 	def __init__(self, database, user, password):
+		self.lock = threading.Lock()
+		
 		self.database = database
 		self.user = user
 		self.password = password
@@ -146,6 +192,9 @@ class Database:
 		
 		self.local = None
 		self.local_cursor = None
+		
+		#Implementação pra puxar contagem total da OP aberta (já que tá fazendo teste de conexao)
+		self.qtdapo = 0
 		
 		service = threading.Thread(target=self.service_t)
 		service.start()

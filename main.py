@@ -1,3 +1,8 @@
+# Controle de apontamento das unidades de acabamento
+# Para a execução do código, é necessário a instalação das bibliotecas
+# pyodbc, i2clcd
+# Autor: Gustavo Niehues
+
 import threading
 import time
 import configparser
@@ -55,11 +60,10 @@ class Apontamento:
 		while True:
 			codbar: str = input()
 			logging.debug('Cod. Barras lido: {0}'.format(codbar))
-			if len(codbar) == 10:
+			if len(codbar) == 10 and codbar[4].__eq__('-'):
 				op, contcel = codbar.split('-')
 				cont, cel = int(contcel[0:4]), int(contcel[-1])
 				op = int(op)
-				
 				if self.numorp == op:
 					result = self.db.insert_entry(self.codemp,
 					                              self.codfil,
@@ -73,18 +77,55 @@ class Apontamento:
 						self.lcd.write_line('Já apontado', 0, 1, 2)
 					if result == 1:
 						self.last_codbar = codbar
-			elif len(codbar) == 24:
+				else:
+					logging.warning('Tentativa de fazer apontamento com OP errada: ' + str(codbar))
+					self.lcd.write_line('OP errada', 0, 1, 2)
+			elif len(codbar) == 24 and codbar[0:2].__eq__('04'):
 				nova_op = int(codbar[2:11])
+				if self.numorp != 0 and nova_op != self.numorp:
+					logging.warning('Não é possível iniciar nova OP sem finalizar a última')
+					self.lcd.write_line('OP nao fechada', 0, 1, 2)
+				elif self.numorp != 0 and nova_op == self.numorp:
+					logging.info('OP fechada: {0}'.format(self.numorp))
+					self.numorp = 0
+					self.qtdprv = 0
+					self.qtdfrd = 0
+					self.config_update('apontamento', 'numorp', self.numorp)
+					self.config_update('apontamento', 'qtdprv', self.qtdprv)
+					self.config_update('apontamento', 'qtdfrd', self.qtdfrd)
+				else:
+					op, qtdprv, fardo = self.db.get_newop(nova_op)
+					if op:
+						self.numorp = op
+						self.qtdfrd = fardo
+						self.qtdprv = qtdprv
+						logging.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
+						             .format(op, fardo, qtdprv))
+						self.config_update('apontamento', 'numorp', op)
+						self.config_update('apontamento', 'qtdfrd', fardo)
+						self.config_update('apontamento', 'qtdprv', qtdprv)
+					else:
+						self.lcd.write_line('Erro OP', 0, 1, 2)
 			else:
 				self.lcd.write_line('Não reconhecido', 0, 1, 2)
 	
 	def status_t(self):
 		while True:
-			self.lcd.write_line('OP: ' + str(self.numorp), 0, 0, 0)
+			self.lcd.write_line('OP:{0}'.format(str(self.numorp)), 0, 0, 0)
 			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
-			self.lcd.write_line('Teste 3', 2, 0, 0)
-			self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
+			self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
+			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
+			# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
 			time.sleep(3)
+
+	def config_update(self, section, config, value):
+		self.cp.set(section, config, str(value))
+		try:
+			with open('config.ini', 'w') as configfile:
+				self.cp.write(configfile)
+		except Exception as e:
+			logging.error('Erro ao salvar configurações:' + str(e))
+			self.lcd.write_line('Erro config', 0, 1, 999999)
 
 
 if __name__ == '__main__':
