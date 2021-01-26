@@ -93,60 +93,63 @@ class Database:
 		self.create_table()
 		self.start_db()
 		while True:
-			if self.conexao:
-				time.sleep(1)
-				query = 'select * from usu_tetiqbag where usu_sitapo = 0'
-				rs = self.local_cursor.execute(query).fetchall()
-				for r in rs:
-					r = list(r)
-					logging.debug(str(r[0])
-					              + str(r[1])
-					              + str(r[2])
-					              + r[3]
-					              + str(r[4])
-					              + r[5]
-					              + str(r[6])
-					              + r[7]
-					              + str(r[8]))
-					query = """insert into usu_tetiqbag
-								(usu_codemp,
-								usu_codfil,
-								usu_codope,
-								usu_codori,
-								usu_numorp,
-								usu_codbar,
-								usu_seqbar,
-								usu_datapo,
-								usu_celapo)
-								values ({0}, {1}, {2}, '{3}', {4}, '{5}', {6}, convert(datetime,'{7}',103), {8})
-								""".format(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8])
-					try:
-						self.conexao_cursor.execute(query)
-						self.conexao.commit()
-						query = "update usu_tetiqbag " \
-						        "set usu_sitapo = 1 " \
-						        "where usu_codbar = '{0}'".format(r[5])
-						self.local_cursor.execute(query)
-						self.local.commit()
-					except pyodbc.IntegrityError:
-						query = "select * from usu_tetiqbag where usu_codbar = '{}'".format(r[5])
-						rs = self.conexao.execute(query).fetchall()
-						logging.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
-						logging.warning('Apontamento original: ' + str(rs[0]))
-						logging.warning('Apontamento detectado: ' + str(r))
-					except Exception as e:
-						logging.error('Problema ao sincronizar bases: ' + str(e) + type(e).__name__)
-						self.conexao = None
-						
-					query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
-					try:
-						self.qtdapo = len(self.conexao_cursor.execute(query).fetchall())
-					except Exception as e:
-						logging.error('Não é possível obter quantidade: ' + str(e) + type(e).__name__)
-						self.conexao = None
-			else:
-				time.sleep(2)
-				self.start_db()
+			try:
+				if self.conexao:
+					time.sleep(1)
+					query = 'select * from usu_tetiqbag where usu_sitapo = 0'
+					rs = self.local_cursor.execute(query).fetchall()
+					for r in rs:
+						r = list(r)
+						logging.debug(str(r[0])
+						              + str(r[1])
+						              + str(r[2])
+						              + r[3]
+						              + str(r[4])
+						              + r[5]
+						              + str(r[6])
+						              + r[7]
+						              + str(r[8]))
+						query = """insert into usu_tetiqbag
+									(usu_codemp,
+									usu_codfil,
+									usu_codope,
+									usu_codori,
+									usu_numorp,
+									usu_codbar,
+									usu_seqbar,
+									usu_datapo,
+									usu_celapo)
+									values ({0}, {1}, {2}, '{3}', {4}, '{5}', {6}, convert(datetime,'{7}',103), {8})
+									""".format(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8])
+						try:
+							self.conexao_cursor.execute(query)
+							self.conexao.commit()
+							query = "update usu_tetiqbag " \
+							        "set usu_sitapo = 1 " \
+							        "where usu_codbar = '{0}'".format(r[5])
+							self.local_cursor.execute(query)
+							self.local.commit()
+						except pyodbc.IntegrityError:
+							query = "select * from usu_tetiqbag where usu_codbar = '{}'".format(r[5])
+							rs = self.conexao.execute(query).fetchall()
+							logging.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
+							logging.warning('Apontamento original: ' + str(rs[0]))
+							logging.warning('Apontamento detectado: ' + str(r))
+						except Exception as e:
+							logging.error('Problema ao sincronizar bases: ' + str(e) + type(e).__name__)
+							self.conexao = None
+							
+						query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
+						try:
+							self.qtdapo = len(self.conexao_cursor.execute(query).fetchall())
+						except Exception as e:
+							logging.error('Não é possível obter quantidade: ' + str(e) + type(e).__name__)
+							self.conexao = None
+				else:
+					time.sleep(2)
+					self.start_db()
+			except Exception as e:
+				logging.error('Erro: ' + str(e) + type(e).__name__)
 	
 	def start_db(self):
 		try:
