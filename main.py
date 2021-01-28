@@ -110,7 +110,6 @@ class Apontamento:
 			else:
 				self.lcd.write_line('Nao reconhecido', 0, 1, 2)
 
-
 	def status_t(self):
 		while True:
 			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
@@ -119,7 +118,6 @@ class Apontamento:
 			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
 			# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
 			time.sleep(3)
-
 
 	def config_update(self, section, config, value):
 		self.cp.set(section, config, str(value))

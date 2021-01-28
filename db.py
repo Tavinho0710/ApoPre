@@ -17,7 +17,7 @@ class Database:
 		except Exception as e:
 			logging.error('Erro ao obter dados' + str(e) + type(e).__name__)
 			rs = self.local_cursor.execute(query).fetchall()
-		if rs is None:
+		if not rs:
 			query = """insert into usu_tetiqbag
 			(usu_codemp ,
 			usu_codfil ,
