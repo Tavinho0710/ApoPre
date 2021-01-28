@@ -9,7 +9,7 @@ import configparser
 import logging
 import sys
 from datetime import datetime
-from lcd2 import Lcd
+from lcd import Lcd
 from db import Database
 
 
