@@ -11,19 +11,12 @@ class Database:
 		datapo = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		query = "select * from usu_tetiqbag where usu_numorp = '{0}' and usu_seqbar = {1}".format(numorp, cont)
 		rs = None
-		if self.get_status():
+		try:
 			with self.lock:
 				rs = self.conexao_cursor.execute(query).fetchall()
-			if rs:
-				print(rs)
-			else:
-				rs = None
-		else:
+		except Exception as e:
+			logging.error('Erro ao obter dados' + str(e) + type(e).__name__)
 			rs = self.local_cursor.execute(query).fetchall()
-			if rs:
-				print(rs)
-			else:
-				rs = None
 		if rs is None:
 			query = """insert into usu_tetiqbag
 			(usu_codemp ,

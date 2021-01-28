@@ -56,7 +56,6 @@ class Apontamento:
 		status.start()
 		
 		logging.info('Início da leitura do código de barras')
-		
 		while True:
 			codbar: str = input()
 			logging.debug('Cod. Barras lido: {0}'.format(codbar))
@@ -111,24 +110,25 @@ class Apontamento:
 						self.lcd.write_line('Erro OP', 0, 1, 2)
 			else:
 				self.lcd.write_line('Nao reconhecido', 0, 1, 2)
-	
-	def status_t(self):
-		while True:
-			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
-			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
-			self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
-			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
-			# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
-			time.sleep(3)
 
-	def config_update(self, section, config, value):
-		self.cp.set(section, config, str(value))
-		try:
-			with open('config.ini', 'w') as configfile:
-				self.cp.write(configfile)
-		except Exception as e:
-			logging.error('Erro ao salvar configurações:' + str(e))
-			self.lcd.write_line('Erro config', 0, 1, 999999)
+def status_t(self):
+	while True:
+		self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
+		self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
+		self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
+		self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
+		# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
+		time.sleep(3)
+
+
+def config_update(self, section, config, value):
+	self.cp.set(section, config, str(value))
+	try:
+		with open('config.ini', 'w') as configfile:
+			self.cp.write(configfile)
+	except Exception as e:
+		logging.error('Erro ao salvar configurações:' + str(e))
+		self.lcd.write_line('Erro config', 0, 1, 999999)
 
 
 if __name__ == '__main__':
