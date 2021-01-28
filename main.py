@@ -9,7 +9,7 @@ import configparser
 import logging
 import sys
 from datetime import datetime
-from lcd import Lcd
+from lcd2 import Lcd
 from db import Database
 
 
@@ -51,7 +51,6 @@ class Apontamento:
 		self.qtdfrd = int(self.cp.get('apontamento', 'qtdfrd'))
 		
 		self.last_codbar = 0
-		
 		status = threading.Thread(target=self.status_t)
 		status.start()
 		
@@ -111,24 +110,25 @@ class Apontamento:
 			else:
 				self.lcd.write_line('Nao reconhecido', 0, 1, 2)
 
-def status_t(self):
-	while True:
-		self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
-		self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
-		self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
-		self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
-		# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
-		time.sleep(3)
+
+	def status_t(self):
+		while True:
+			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
+			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
+			self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
+			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
+			# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
+			time.sleep(3)
 
 
-def config_update(self, section, config, value):
-	self.cp.set(section, config, str(value))
-	try:
-		with open('config.ini', 'w') as configfile:
-			self.cp.write(configfile)
-	except Exception as e:
-		logging.error('Erro ao salvar configurações:' + str(e))
-		self.lcd.write_line('Erro config', 0, 1, 999999)
+	def config_update(self, section, config, value):
+		self.cp.set(section, config, str(value))
+		try:
+			with open('config.ini', 'w') as configfile:
+				self.cp.write(configfile)
+		except Exception as e:
+			logging.error('Erro ao salvar configurações:' + str(e))
+			self.lcd.write_line('Erro config', 0, 1, 999999)
 
 
 if __name__ == '__main__':
