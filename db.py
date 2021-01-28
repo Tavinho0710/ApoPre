@@ -31,8 +31,8 @@ class Database:
 			usu_sitapo)
 			values ({0}, {1}, {2}, '{3}', {4}, '{5}', {6}, '{7}', {8}, {9})
 			""".format(codemp, codfil, codope, codori, numorp, codbar, cont, datapo, cel, 0)
-			self.local_cursor.execute(query)
-			self.local.commit()
+			self.local_insert_cursor.execute(query)
+			self.local_insert.commit()
 			return 1
 		else:
 			return 0
@@ -83,6 +83,8 @@ class Database:
 	def service_t(self):
 		self.local = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
 		self.local_cursor = self.local.cursor()
+		self.local_insert = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
+		self.local_insert_cursor = self.local_insert.cursor()
 		self.create_table()
 		self.start_db()
 		while True:
@@ -188,6 +190,9 @@ class Database:
 		
 		self.local = None
 		self.local_cursor = None
+		
+		self.local_insert = None
+		self.local_insert_cursor = None
 		
 		#Implementação pra puxar contagem total da OP aberta (já que tá fazendo teste de conexao)
 		self.qtdapo = 0

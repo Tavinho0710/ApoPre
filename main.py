@@ -9,7 +9,7 @@ import configparser
 import logging
 import sys
 from datetime import datetime
-from lcd import Lcd
+from lcd2 import Lcd
 from db import Database
 
 
@@ -55,60 +55,63 @@ class Apontamento:
 		status.start()
 		
 		logging.info('Início da leitura do código de barras')
-		while True:
-			codbar: str = input()
-			logging.debug('Cod. Barras lido: {0}'.format(codbar))
-			if len(codbar) == 10 and codbar[4].__eq__('-'):
-				op, contcel = codbar.split('-')
-				cont, cel = int(contcel[0:4]), int(contcel[-1])
-				op = int(op)
-				if self.numorp == op:
-					result = self.db.insert_entry(self.codemp,
-					                              self.codfil,
-					                              self.codope,
-					                              self.codori,
-					                              self.numorp,
-					                              codbar,
-					                              cont,
-					                              cel)
-					if result == 0:
-						self.lcd.write_line('Ja apontado', 0, 1, 2)
-					if result == 1:
-						self.last_codbar = codbar
-						self.lcd.write_line('Apontado', 0, 1, 1)
-				else:
-					logging.warning('Tentativa de fazer apontamento com OP errada: ' + str(codbar))
-					self.lcd.write_line('OP nao confere', 0, 1, 2)
-			elif len(codbar) == 24 and codbar[0:2].__eq__('04'):
-				nova_op = int(codbar[2:11])
-				if self.numorp != 0 and nova_op != self.numorp:
-					logging.warning('Não é possível iniciar nova OP sem finalizar a última')
-					self.lcd.write_line('OP nao fechada', 0, 1, 2)
-				elif self.numorp != 0 and nova_op == self.numorp:
-					logging.info('OP fechada: {0}'.format(self.numorp))
-					self.lcd.write_line('OP fechada', 0, 1, 2)
-					self.numorp = 0
-					self.qtdprv = 0
-					self.qtdfrd = 0
-					self.config_update('apontamento', 'numorp', self.numorp)
-					self.config_update('apontamento', 'qtdprv', self.qtdprv)
-					self.config_update('apontamento', 'qtdfrd', self.qtdfrd)
-				else:
-					op, qtdprv, fardo = self.db.get_newop(nova_op)
-					if op:
-						self.numorp = op
-						self.qtdfrd = fardo
-						self.qtdprv = qtdprv
-						logging.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
-						             .format(op, fardo, qtdprv))
-						self.config_update('apontamento', 'numorp', op)
-						self.config_update('apontamento', 'qtdfrd', fardo)
-						self.config_update('apontamento', 'qtdprv', qtdprv)
-						self.lcd.write_line('Nova OP: ' + str(op), 0, 1, 2)
+		try:
+			while True:
+				codbar: str = input()
+				logging.debug('Cod. Barras lido: {0}'.format(codbar))
+				if len(codbar) == 10 and codbar[4].__eq__('-'):
+					op, contcel = codbar.split('-')
+					cont, cel = int(contcel[0:4]), int(contcel[-1])
+					op = int(op)
+					if self.numorp == op:
+						result = self.db.insert_entry(self.codemp,
+						                              self.codfil,
+						                              self.codope,
+						                              self.codori,
+						                              self.numorp,
+						                              codbar,
+						                              cont,
+						                              cel)
+						if result == 0:
+							self.lcd.write_line('Ja apontado', 0, 1, 2)
+						if result == 1:
+							self.last_codbar = codbar
+							self.lcd.write_line('Apontado', 0, 1, 1)
 					else:
-						self.lcd.write_line('Erro OP', 0, 1, 2)
-			else:
-				self.lcd.write_line('Nao reconhecido', 0, 1, 2)
+						logging.warning('Tentativa de fazer apontamento com OP errada: ' + str(codbar))
+						self.lcd.write_line('OP nao confere', 0, 1, 2)
+				elif len(codbar) == 24 and codbar[0:2].__eq__('04'):
+					nova_op = int(codbar[2:11])
+					if self.numorp != 0 and nova_op != self.numorp:
+						logging.warning('Não é possível iniciar nova OP sem finalizar a última')
+						self.lcd.write_line('OP nao fechada', 0, 1, 2)
+					elif self.numorp != 0 and nova_op == self.numorp:
+						logging.info('OP fechada: {0}'.format(self.numorp))
+						self.lcd.write_line('OP fechada', 0, 1, 2)
+						self.numorp = 0
+						self.qtdprv = 0
+						self.qtdfrd = 0
+						self.config_update('apontamento', 'numorp', self.numorp)
+						self.config_update('apontamento', 'qtdprv', self.qtdprv)
+						self.config_update('apontamento', 'qtdfrd', self.qtdfrd)
+					else:
+						op, qtdprv, fardo = self.db.get_newop(nova_op)
+						if op:
+							self.numorp = op
+							self.qtdfrd = fardo
+							self.qtdprv = qtdprv
+							logging.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
+							             .format(op, fardo, qtdprv))
+							self.config_update('apontamento', 'numorp', op)
+							self.config_update('apontamento', 'qtdfrd', fardo)
+							self.config_update('apontamento', 'qtdprv', qtdprv)
+							self.lcd.write_line('Nova OP: ' + str(op), 0, 1, 2)
+						else:
+							self.lcd.write_line('Erro OP', 0, 1, 2)
+				else:
+					self.lcd.write_line('Nao reconhecido', 0, 1, 2)
+		except Exception as e:
+			logging.exception('Erro fatal')
 
 	def status_t(self):
 		while True:
