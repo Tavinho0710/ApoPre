@@ -49,6 +49,7 @@ class Apontamento:
 		self.numorp = int(self.cp.get('apontamento', 'numorp'))
 		self.qtdprv = int(self.cp.get('apontamento', 'qtdprv'))
 		self.qtdfrd = int(self.cp.get('apontamento', 'qtdfrd'))
+		self.numfrd = int(self.cp.get('apontamento', 'numfrd'))
 		
 		self.last_codbar = 0
 		status = threading.Thread(target=self.status_t)
@@ -77,6 +78,11 @@ class Apontamento:
 						if result == 1:
 							self.last_codbar = codbar
 							self.lcd.write_line('Apontado', 0, 1, 1)
+							if self.numfrd == self.qtdfrd:
+								self.numfrd = 1
+							else:
+								self.numfrd = self.numfrd + 1
+							self.config_update('apontamento', 'numfrd', self.numfrd)
 					else:
 						logging.warning('Tentativa de fazer apontamento com OP errada: ' + str(codbar))
 						self.lcd.write_line('OP nao confere', 0, 1, 2)
@@ -100,11 +106,13 @@ class Apontamento:
 							self.numorp = op
 							self.qtdfrd = fardo
 							self.qtdprv = qtdprv
+							self.numfrd = 0
 							logging.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
 							             .format(op, fardo, qtdprv))
 							self.config_update('apontamento', 'numorp', op)
 							self.config_update('apontamento', 'qtdfrd', fardo)
 							self.config_update('apontamento', 'qtdprv', qtdprv)
+							self.config_update('apontamento', 'numfrd', self.numfrd)
 							self.lcd.write_line('Nova OP: ' + str(op), 0, 1, 2)
 						else:
 							self.lcd.write_line('Erro OP', 0, 1, 2)
@@ -117,9 +125,12 @@ class Apontamento:
 		while True:
 			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
 			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
-			self.lcd.write_line('Fardo: {0}'.format(str(self.qtdfrd)), 2, 0, 0)
-			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo(), self.qtdprv), 3, 0, 0)
-			# self.lcd.write_line('C:' + ('S' if self.db.get_status() else 'N'), 3, 0, 0)
+			if self.numfrd == self.qtdfrd and self.qtdfrd != 0:
+				self.lcd.write_line('Fardo: {0}/{1}!!!'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
+			else:
+				self.lcd.write_line('Fardo: {0}/{1}'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
+			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo() if self.numorp != 0 else str(0),
+			                                           self.qtdprv), 3, 0, 0)
 			time.sleep(3)
 
 	def config_update(self, section, config, value):
@@ -130,6 +141,7 @@ class Apontamento:
 		except Exception as e:
 			logging.error('Erro ao salvar configurações:' + str(e))
 			self.lcd.write_line('Erro config', 0, 1, 999999)
+			sys.exit()
 
 
 if __name__ == '__main__':
