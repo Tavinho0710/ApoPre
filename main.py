@@ -61,6 +61,9 @@ class Apontamento:
 				codbar: str = input()
 				logging.debug('Cod. Barras lido: {0}'.format(codbar))
 				if len(codbar) == 10 and codbar[4].__eq__('-'):
+					if self.last_codbar == codbar:
+						self.lcd.write_line('Apontado', 0, 1, 1)
+						continue
 					op, contcel = codbar.split('-')
 					cont, cel = int(contcel[0:4]), int(contcel[-1])
 					op = int(op)
