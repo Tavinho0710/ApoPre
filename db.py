@@ -46,6 +46,12 @@ class Database:
 	def get_qtdapo(self):
 		return self.qtdapo
 	
+	def get_duplicado(self):
+		query = 'select * from usu_tetiqbag where usu_sitapo = 2'
+		rs = self.local_cursor.execute(query).fetchone()
+		if rs:
+			return True
+	
 	def get_newop(self, op):
 		query = "SELECT numorp, qtdprv FROM e900cop WHERE CodEmp = 1 AND CodOri = '04' AND NumOrp" \
 		        "= {0}".format(op)
@@ -83,8 +89,13 @@ class Database:
 	def service_t(self):
 		self.local = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
 		self.local_cursor = self.local.cursor()
+		
 		self.local_insert = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
 		self.local_insert_cursor = self.local_insert.cursor()
+		
+		self.local_check = sqlite3.connect('sapiens_backup.db', check_same_thread=False)
+		self.local_check_cursor = self.local_check.cursor()
+		
 		self.create_table()
 		self.start_db()
 		while True:
@@ -130,10 +141,14 @@ class Database:
 							logging.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
 							logging.warning('Apontamento original: ' + str(rs[0]))
 							logging.warning('Apontamento detectado: ' + str(r))
+							query = "update usu_tetiqbag " \
+							        "set usu_sitapo = 2 " \
+							        "where usu_codbar = '{0}'".format(r[5])
+							self.local_cursor.execute(query)
+							self.local.commit()
 						except Exception as e:
 							logging.error('Problema ao sincronizar bases: ' + str(e) + type(e).__name__)
 							self.conexao = None
-							
 						query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
 						try:
 							self.qtdapo = len(self.conexao_cursor.execute(query).fetchall())
@@ -193,6 +208,9 @@ class Database:
 		
 		self.local_insert = None
 		self.local_insert_cursor = None
+		
+		self.local_check = None
+		self.local_check_cursor = None
 		
 		#Implementação pra puxar contagem total da OP aberta (já que tá fazendo teste de conexao)
 		self.qtdapo = 0

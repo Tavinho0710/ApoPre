@@ -126,7 +126,10 @@ class Apontamento:
 
 	def status_t(self):
 		while True:
-			self.lcd.write_line('OP: {0}'.format(str(self.numorp)), 0, 0, 0)
+			op = 'OP: {0}'.format(str(self.numorp))
+			if self.db.get_duplicado():
+				op = 'OP: {0}{1: >16}'.format(str(self.numorp), '(!)')
+			self.lcd.write_line(op, 0, 0, 0)
 			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
 			if self.numfrd == self.qtdfrd and self.qtdfrd != 0:
 				self.lcd.write_line('Fardo: {0}/{1}!!!'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
