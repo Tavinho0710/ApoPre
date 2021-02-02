@@ -48,7 +48,7 @@ class Database:
 	
 	def get_duplicado(self):
 		query = 'select * from usu_tetiqbag where usu_sitapo = 2'
-		rs = self.local_cursor.execute(query).fetchone()
+		rs = self.local_check.execute(query).fetchone()
 		if rs:
 			return True
 	
