@@ -48,9 +48,15 @@ class Database:
 	
 	def get_duplicado(self):
 		query = 'select * from usu_tetiqbag where usu_sitapo = 2'
-		rs = self.local_check.execute(query).fetchone()
+		rs = []
+		try:
+			rs = self.local_check.execute(query).fetchone()
+		except Exception as e:
+			logging.exception('Problema' + str(e))
 		if rs:
 			return True
+		else:
+			return False
 	
 	def get_newop(self, op):
 		query = "SELECT numorp, qtdprv FROM e900cop WHERE CodEmp = 1 AND CodOri = '04' AND NumOrp" \
