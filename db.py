@@ -136,7 +136,7 @@ class Database:
 							self.local_cursor.execute(query)
 							self.local.commit()
 						except pyodbc.IntegrityError:
-							query = "select * from usu_tetiqbag where usu_codbar = '{}'".format(r[5])
+							query = "select * from usu_tetiqbag where usu_numorp = {0} and usu_seqbar = {1}".format(r[4], r[6])
 							rs = self.conexao.execute(query).fetchall()
 							logging.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
 							logging.warning('Apontamento original: ' + str(rs[0]))
