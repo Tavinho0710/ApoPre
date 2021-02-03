@@ -125,19 +125,22 @@ class Apontamento:
 			logging.exception('Erro fatal')
 
 	def status_t(self):
-		while True:
-			op = 'OP: {0}'.format(str(self.numorp))
-			if self.db.get_duplicado():
-				op = 'OP: {0}{1: >16}'.format(str(self.numorp), '(!)')
-			self.lcd.write_line(op, 0, 0, 0)
-			self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
-			if self.numfrd == self.qtdfrd and self.qtdfrd != 0:
-				self.lcd.write_line('Fardo: {0}/{1}!!!'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
-			else:
-				self.lcd.write_line('Fardo: {0}/{1}'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
-			self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo() if self.numorp != 0 else str(0),
-			                                           self.qtdprv), 3, 0, 0)
-			time.sleep(3)
+		try:
+			while True:
+				op = 'OP: {0}'.format(str(self.numorp))
+				if self.db.get_duplicado():
+					op = 'OP: {0}{1: >16}'.format(str(self.numorp), '(!)')
+				self.lcd.write_line(op, 0, 0, 0)
+				self.lcd.write_line('Ult: {0}'.format(self.last_codbar), 1, 0, 0)
+				if self.numfrd == self.qtdfrd and self.qtdfrd != 0:
+					self.lcd.write_line('Fardo: {0}/{1}!!!'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
+				else:
+					self.lcd.write_line('Fardo: {0}/{1}'.format(str(self.numfrd), str(self.qtdfrd)), 2, 0, 0)
+				self.lcd.write_line('Qtde: {0}/{1}'.format(self.db.get_qtdapo() if self.numorp != 0 else str(0),
+				                                           self.qtdprv), 3, 0, 0)
+				time.sleep(1)
+		except Exception as e:
+			logging.exception('Erro: ' + str(e))
 
 	def config_update(self, section, config, value):
 		self.cp.set(section, config, str(value))
