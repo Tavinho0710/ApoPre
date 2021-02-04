@@ -35,6 +35,7 @@ class Database:
 			self.local_insert.commit()
 			return 1
 		else:
+			logging.warning('Já apontado: ' + str(rs))
 			return 0
 	
 	def get_status(self):
