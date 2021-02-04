@@ -113,7 +113,7 @@ class Database:
 					rs = self.local_cursor.execute(query).fetchall()
 					for r in rs:
 						r = list(r)
-						logging.debug(str(r))
+						logging.debug('Sincronização: ' + str(r))
 						query = """insert into usu_tetiqbag
 									(usu_codemp,
 									usu_codfil,

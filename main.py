@@ -59,7 +59,7 @@ class Apontamento:
 		try:
 			while True:
 				codbar: str = input()
-				logging.debug('Cod. Barras lido: {0}'.format(codbar))
+				logging.info('Cod. Barras lido: {0}'.format(codbar))
 				if len(codbar) == 10 and codbar[4].__eq__('-'):
 					if self.last_codbar == codbar:
 						self.lcd.write_line('Apontado', 0, 1, 1)
@@ -80,7 +80,8 @@ class Apontamento:
 							self.lcd.write_line('Ja apontado', 0, 1, 2)
 						if result == 1:
 							self.last_codbar = codbar
-							self.lcd.write_line('Apontado', 0, 1, 1)
+							self.lcd.write_line('Apontado: {0}'.format(codbar), 0, 1, 1)
+							logging.info('Apontado: {0}'.format(codbar))
 							if self.numfrd == self.qtdfrd:
 								self.numfrd = 1
 							else:
