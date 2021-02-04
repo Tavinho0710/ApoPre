@@ -113,15 +113,7 @@ class Database:
 					rs = self.local_cursor.execute(query).fetchall()
 					for r in rs:
 						r = list(r)
-						logging.debug(str(r[0])
-						              + str(r[1])
-						              + str(r[2])
-						              + r[3]
-						              + str(r[4])
-						              + r[5]
-						              + str(r[6])
-						              + r[7]
-						              + str(r[8]))
+						logging.debug(str(r))
 						query = """insert into usu_tetiqbag
 									(usu_codemp,
 									usu_codfil,
