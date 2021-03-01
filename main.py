@@ -60,12 +60,15 @@ class Apontamento:
 			while True:
 				codbar: str = input()
 				logging.info('Cod. Barras lido: {0}'.format(codbar))
-				if len(codbar) == 10 and codbar[4].__eq__('-'):
+				if (len(codbar) == 10 or len(codbar) == 11) and codbar[4].__eq__('-'):
 					if self.last_codbar == codbar:
 						self.lcd.write_line('Apontado', 0, 1, 1)
 						continue
 					op, contcel = codbar.split('-')
-					cont, cel = int(contcel[0:4]), int(contcel[-1])
+					if len(codbar) == 11:
+						cont, cel = int(contcel[0:5]), int(contcel[-1])
+					else:
+						cont, cel = int(contcel[0:4]), int(contcel[-1])
 					op = int(op)
 					if self.numorp == op:
 						result = self.db.insert_entry(self.codemp,
