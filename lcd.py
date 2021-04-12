@@ -1,5 +1,5 @@
 from collections import deque
-import time, threading
+import time, threading, logging
 import i2clcd
 
 
@@ -15,13 +15,16 @@ class Lcd:
 
 	def fila_t(self):
 		while True:
-			if self.fila_espera:
-				text, line, type, duration = self.fila_espera.popleft()
-				print(text, line, type, duration)
-				if type == 1:
-					self.lcd.clear()
-				self.lcd.print_line(text, line)
-				time.sleep(duration)
+			try:
+				if self.fila_espera:
+					text, line, type, duration = self.fila_espera.popleft()
+					print(text, line, type, duration)
+					if type == 1:
+						self.lcd.clear()
+					self.lcd.print_line(text, line)
+					time.sleep(duration)
+			except Exception as e:
+				logging.error("Erro LCD: " + e)
 
 	def __init__(self):
 		self.fila_espera = deque()
