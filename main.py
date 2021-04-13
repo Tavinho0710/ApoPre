@@ -124,6 +124,9 @@ class Apontamento:
 					self.lcd.write_line('Nao reconhecido', 0, 1, 2)
 		except Exception as e:
 			logging.exception('Erro fatal')
+			
+		self.lcd.write_line("Fim", 0, 0, 0)
+		logging.error("Programa passou do While, verificar")
 
 	def status_t(self):
 		try:
