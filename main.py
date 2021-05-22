@@ -12,7 +12,6 @@ from datetime import datetime
 from lcd import Lcd
 from db import Database
 
-
 class Apontamento:
 	def __init__(self):
 		self.lcd = Lcd()
@@ -154,6 +153,7 @@ class Apontamento:
 		except Exception as e:
 			logging.error('Erro ao salvar configurações:' + str(e))
 			self.lcd.write_line('Erro config', 0, 1, 999999)
+			time.sleep(5)
 			sys.exit()
 
 
