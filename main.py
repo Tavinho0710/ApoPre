@@ -71,8 +71,8 @@ class Apontamento:
 
                     if self.last_codbar == codbar:
                         self.lcd.write_line('Apontado', 0, 1, 1)
+                        self.status()
                         continue
-
                     try:
                         op, contcel = codbar.split('-')
                         cont, cel = int(
