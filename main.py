@@ -60,18 +60,17 @@ class Apontamento:
         self.numfrd = int(self.cp.get('apontamento', 'numfrd'))
 
         self.last_codbar = 0
-        self.status()
         logger.info('Início da leitura do código de barras')
 
         try:
             while True:
+                self.status()
                 codbar: str = input()
                 logger.info('Cod. Barras lido: {0}'.format(codbar))
                 if (7 <= len(codbar) <= 11) and codbar[4].__eq__('-'):
 
                     if self.last_codbar == codbar:
                         self.lcd.write_line('Apontado', 0, 1, 1)
-                        self.status()
                         continue
                     try:
                         op, contcel = codbar.split('-')
@@ -82,7 +81,7 @@ class Apontamento:
                         logger.info('Código invalido lido')
                         self.lcd.write_line('Nao reconhecido', 0, 1, 1)
                         continue
-
+                        
                     if self.numorp == op:
                         result = self.db.insert_entry(self.codemp,
                                                       self.codfil,
