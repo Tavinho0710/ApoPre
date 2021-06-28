@@ -24,9 +24,10 @@ class Lcd:
 					self.lcd.print_line(text, line)
 					time.sleep(duration)
 			except Exception as e:
-				logging.error("Erro LCD: " + e)
+				logger.error("Erro LCD: " + e)
 
-	def __init__(self):
+	def __init__(self, logger):
+		self.logger = logger
 		self.fila_espera = deque()
 		self.lcd = i2clcd.i2clcd(i2c_bus=1, i2c_addr=0x27, lcd_width=20)
 		self.lcd.init()

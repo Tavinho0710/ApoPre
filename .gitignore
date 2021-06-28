@@ -3,3 +3,11 @@
 /lcd2.py
 *.log
 *.xml
+/__pychache__
+/bin/*
+/include/*
+/lib/*
+/lib64/*
+/share/*
+/pyvenv.cfg
+
