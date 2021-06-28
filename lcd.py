@@ -24,7 +24,7 @@ class Lcd:
 					self.lcd.print_line(text, line)
 					time.sleep(duration)
 			except Exception as e:
-				logger.error("Erro LCD: " + e)
+				self.logger.error("Erro LCD: " + e)
 
 	def __init__(self, logger):
 		self.logger = logger
