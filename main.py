@@ -1,6 +1,6 @@
 # Controle de apontamento das unidades de acabamento
 # Para a execução do código, é necessário a instalação das bibliotecas
-# pyodbc, i2clcd
+# pytds, i2clcd
 # Autor: Gustavo Niehues
 
 import time
@@ -8,7 +8,6 @@ import configparser
 import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
-from datetime import datetime
 from lcd import Lcd
 from db import Database
 
@@ -17,38 +16,37 @@ class Apontamento:
     def __init__(self):
 
         # Inicialização de logging
-        logger = logging.getLogger('Apontamento Bag')
-        logger.setLevel('DEBUG')
+        self.logger = logging.getLogger('Apontamento')
+        self.logger.setLevel('DEBUG')
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler = TimedRotatingFileHandler(
             'apontamento.log', when='d', interval=1, backupCount=30)
         handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        self.logger.addHandler(handler)
 
-        self.lcd = Lcd(logger)
+        self.lcd = Lcd()
         self.cp = configparser.ConfigParser()
 
         try:
             self.cp.read('config.ini')
         except Exception as e:
-            logger.error('Erro ao recuperar informações de configuração')
-            self.lcd.write_line('Erro', 0, 1, )
+            self.logger.error('Erro ao recuperar informações de configuração')
+            self.lcd.write_line('Erro', 0, 1, 1)
             sys.exit()
 
-        logger.info('Inicializando')
+        self.logger.info('Inicializando')
 
         server = self.cp.get('sistema', 'server')
         database = self.cp.get('sistema', 'database')
         user = self.cp.get('sistema', 'user')
         pwd = self.cp.get('sistema', 'password')
 
-        logger.info('Incialização da base de dados')
+        self.logger.info('Incialização da base de dados')
 
-        self.db = Database(logger, server, database, user, pwd)
-        time.sleep(5)
+        self.db = Database(server, database, user, pwd)
 
-        logger.info('Carregando dados de apontamento')
+        self.logger.info('Carregando dados de apontamento')
 
         self.codemp = int(self.cp.get('apontamento', 'codemp'))
         self.codfil = int(self.cp.get('apontamento', 'codfil'))
@@ -60,15 +58,14 @@ class Apontamento:
         self.numfrd = int(self.cp.get('apontamento', 'numfrd'))
 
         self.last_codbar = 0
-        logger.info('Início da leitura do código de barras')
+        self.logger.info('Início da leitura do código de barras')
 
         try:
             while True:
                 self.status()
                 codbar: str = input()
-                logger.info('Cod. Barras lido: {0}'.format(codbar))
+                self.logger.info('Cod. Barras lido: {0}'.format(codbar))
                 if (7 <= len(codbar) <= 11) and codbar[4].__eq__('-'):
-
                     if self.last_codbar == codbar:
                         self.lcd.write_line('Apontado', 0, 1, 1)
                         continue
@@ -78,7 +75,7 @@ class Apontamento:
                             contcel[0:(len(contcel)-1)]), int(contcel[-1])
                         op = int(op)
                     except:
-                        logger.info('Código invalido lido')
+                        self.logger.info('Código invalido lido')
                         self.lcd.write_line('Nao reconhecido', 0, 1, 1)
                         continue
                         
@@ -97,7 +94,7 @@ class Apontamento:
                             self.last_codbar = codbar
                             self.lcd.write_line(
                                 'Apontado: {0}'.format(codbar), 0, 1, 1)
-                            logger.info('Apontado: {0}'.format(codbar))
+                            self.logger.info('Apontado: {0}'.format(codbar))
                             if self.numfrd == self.qtdfrd:
                                 self.numfrd = 1
                             else:
@@ -105,17 +102,17 @@ class Apontamento:
                             self.config_update(
                                 'apontamento', 'numfrd', self.numfrd)
                     else:
-                        logger.warning(
+                        self.logger.warning(
                             'Tentativa de fazer apontamento com OP errada: ' + str(codbar))
                         self.lcd.write_line('OP nao confere', 0, 1, 2)
                 elif len(codbar) == 24 and codbar[0:2].__eq__('04'):
                     nova_op = int(codbar[2:11])
                     if self.numorp != 0 and nova_op != self.numorp:
-                        logger.warning(
+                        self.logger.warning(
                             'Não é possível iniciar nova OP sem finalizar a última')
                         self.lcd.write_line('OP nao fechada', 0, 1, 2)
                     elif self.numorp != 0 and nova_op == self.numorp:
-                        logger.info('OP fechada: {0}'.format(self.numorp))
+                        self.logger.info('OP fechada: {0}'.format(self.numorp))
                         self.lcd.write_line('OP fechada', 0, 1, 2)
                         self.numorp = 0
                         self.qtdprv = 0
@@ -133,7 +130,7 @@ class Apontamento:
                             self.qtdfrd = fardo
                             self.qtdprv = qtdprv
                             self.numfrd = 0
-                            logger.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
+                            self.logger.info('Dados de OP atualizados: OP - {0}, Qtde prev. - {1}, Qtde fardo - {2}'
                                         .format(op, fardo, qtdprv))
                             self.config_update('apontamento', 'numorp', op)
                             self.config_update('apontamento', 'qtdfrd', fardo)
@@ -147,10 +144,10 @@ class Apontamento:
                     self.lcd.write_line('Nao reconhecido', 0, 1, 2)
                 self.status()
         except Exception as e:
-            logger.exception('Erro fatal')
+            self.logger.exception('Erro fatal')
 
         self.lcd.write_line("Fim", 0, 0, 0)
-        logger.error("Programa passou do While, verificar")
+        self.logger.error("Programa passou do While, verificar")
 
     def status(self):
         op = 'OP: {0}'.format(str(self.numorp))

@@ -3,11 +3,13 @@
 /lcd2.py
 *.log
 *.xml
-/__pychache__
+/__pycache__/*
 /bin/*
 /include/*
 /lib/*
 /lib64/*
 /share/*
 /pyvenv.cfg
-
+/Scripts/*
+/.vscode/*
+/sapiens_backup.db

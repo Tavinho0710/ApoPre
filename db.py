@@ -3,23 +3,24 @@ import time
 import threading
 import pytds
 from datetime import datetime
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 
 class Database:
 	def insert_entry(self, codemp, codfil, codope, codori, numorp, codbar, cont, cel):
 		datapo = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 		query = "select * from usu_tetiqbag where usu_numorp = '{0}' and usu_seqbar = {1}".format(numorp, cont)
-		rs = None
-		conn_fail = False
+		rs_sapiens = None
+		rs_backup = self.sapiens_cursor.execute(query).fetchall()
 		try:
-			with pytds.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
+			with pytds.connect(self.server, self.database, self.user, self.password, timeout=1, login_timeout=1) as conn:
 				with conn.cursor() as cursor:
-					rs = cursor.execute(query).fetchall()
+					rs_sapiens = cursor.execute(query).fetchall()
 		except Exception as e:
 			self.logger.error('Erro ao obter dados' + str(e) + type(e).__name__)
-			rs = self.sapiens_cursor.execute(query).fetchall()
-			conn_fail = True
-		if not rs:
+		
+		if not rs_sapiens and not rs_backup:
 			query = """insert into usu_tetiqbag
 			(usu_codemp ,
 			usu_codfil ,
@@ -35,13 +36,9 @@ class Database:
 			""".format(codemp, codfil, codope, codori, numorp, codbar, cont, datapo, cel, 0)
 			self.sapiens_cursor.execute(query)
 			self.sapiens_conn.commit()
-			if conn_fail:
-				pass
-			else:
-				self.sync_databases()
 			return 1
 		else:
-			self.logger.warning('Já apontado: ' + str(rs))
+			self.logger.warning('Já apontado: ' + str(rs_sapiens) + 'Backup: ' + str(rs_backup))
 			return 0
 	
 	def get_qtdapo(self):
@@ -81,9 +78,13 @@ class Database:
 			return None, None, None
 				
 	def sync_databases(self):
-		try:
+		sapiens_backup = sqlite3.connect('sapiens_backup.db')
+		sapiens_backup_cursor = sapiens_backup.cursor()
+
+		while True:
+			time.sleep(3)
 			query = 'select * from usu_tetiqbag where usu_sitapo = 0'
-			rs = self.sapiens_cursor.execute(query).fetchall()
+			rs = sapiens_backup_cursor.execute(query).fetchall()
 			for r in rs:
 				r = list(r)
 				self.logger.debug('Sincronização: ' + str(r))
@@ -100,15 +101,15 @@ class Database:
 							values ({0}, {1}, {2}, '{3}', {4}, '{5}', {6}, convert(datetime,'{7}',103), {8})
 							""".format(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8])
 				try:
-					with pytds.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
+					with pytds.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
 						with conn.cursor() as cursor:
 								cursor.execute(query)
 						conn.commit()	
 					query = "update usu_tetiqbag " \
 							"set usu_sitapo = 1 " \
 							"where usu_codbar = '{0}'".format(r[5])
-					self.sapiens_cursor.execute(query)
-					self.sapiens_conn.commit()
+					sapiens_backup_cursor.execute(query)
+					sapiens_backup.commit()
 
 				except pytds.IntegrityError:
 					self.logger.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
@@ -116,20 +117,18 @@ class Database:
 					query = "update usu_tetiqbag " \
 							"set usu_sitapo = 2 " \
 							"where usu_codbar = '{0}'".format(r[5])
-					self.sapiens_cursor.execute(query)
-					self.sapiens_conn.commit()
+					sapiens_backup_cursor.execute(query)
+					sapiens_backup.commit()
 				except Exception as e:
 					self.logger.error('Problema ao sincronizar bases: ' + str(e) + type(e).__name__)
+
 				query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
 				try:
-					with pytds.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
+					with pytds.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
 						with conn.cursor() as cursor:
 							self.qtdapo = len(cursor.execute(query).fetchall())
 				except Exception as e:
 					self.logger.error('Não é possível obter quantidade: ' + str(e) + type(e).__name__)
-					self.conexao = None
-		except Exception as e:
-			self.logger.error('' + str(e) + type(e).__name__)
 	
 	def create_table(self):
 		query = """
@@ -148,8 +147,15 @@ class Database:
 		self.sapiens_cursor.execute(query)
 		self.sapiens_conn.commit()
 
-	def __init__(self, logger, server, database, user, password):
-		self.logger = logger
+	def __init__(self, server, database, user, password):		
+		self.logger = logging.getLogger('BD')
+		self.logger.setLevel('DEBUG')
+		formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+		handler = TimedRotatingFileHandler(
+            'apontamento.log', when='d', interval=1, backupCount=30)
+		handler.setFormatter(formatter)
+		self.logger.addHandler(handler)
 
 		self.server = server
 		self.database = database
@@ -162,4 +168,6 @@ class Database:
 
 		#Implementação pra puxar contagem total da OP aberta (já que tá fazendo teste de conexao)
 		self.qtdapo = 0
-		
+
+		service_sync_database = threading.Thread(target=self.sync_databases)
+		service_sync_database.start()
