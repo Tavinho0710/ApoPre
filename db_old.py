@@ -1,7 +1,7 @@
 import sqlite3
 import time
 import threading
-import pyodbc
+import pytds
 from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -14,7 +14,7 @@ class Database:
 		rs_sapiens = None
 		rs_backup = self.sapiens_cursor.execute(query).fetchall()
 		try:
-			with pyodbc.connect(self.server, self.database, self.user, self.password, timeout=1, login_timeout=1) as conn:
+			with pytds.connect(self.server, self.database, self.user, self.password, timeout=1, login_timeout=1) as conn:
 				with conn.cursor() as cursor:
 					rs_sapiens = cursor.execute(query).fetchall()
 		except Exception as e:
@@ -49,7 +49,7 @@ class Database:
 		        "= {0}".format(op)
 		rs = None
 		try:
-			with pyodbc.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
+			with pytds.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
 				with conn.cursor() as cursor:
 					rs = cursor.execute(query).fetchone()
 		except Exception as e:
@@ -66,7 +66,7 @@ class Database:
 					and e900qdo.NumOrp = {0}
 					""".format(op)
 			try:
-				with pyodbc.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
+				with pytds.connect(self.server, self.database, self.user, self.password, timeout=2, login_timeout=2) as conn:
 					with conn.cursor() as cursor:
 						qtde_fardo = list(cursor.execute(query).fetchone())
 			except Exception as e:
@@ -101,7 +101,7 @@ class Database:
 							values ({0}, {1}, {2}, '{3}', {4}, '{5}', {6}, convert(datetime,'{7}',103), {8})
 							""".format(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8])
 				try:
-					with pyodbc.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
+					with pytds.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
 						with conn.cursor() as cursor:
 								cursor.execute(query)
 						conn.commit()	
@@ -111,7 +111,7 @@ class Database:
 					sapiens_backup_cursor.execute(query)
 					sapiens_backup.commit()
 
-				except pyodbc.IntegrityError:
+				except pytds.IntegrityError:
 					self.logger.warning('Encontrada chave já apontada no banco de dados principal, verificar colisão:')
 					self.logger.warning('Apontamento detectado: ' + str(r))
 					query = "update usu_tetiqbag " \
@@ -124,7 +124,7 @@ class Database:
 
 				query = 'select usu_seqbar from usu_tetiqbag where usu_numorp = {0}'.format(r[4])
 				try:
-					with pyodbc.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
+					with pytds.connect(self.server, self.database, self.user, self.password, timeout=3, login_timeout=3) as conn:
 						with conn.cursor() as cursor:
 							self.qtdapo = len(cursor.execute(query).fetchall())
 				except Exception as e:

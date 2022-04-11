@@ -13,3 +13,4 @@
 /Scripts/*
 /.vscode/*
 /sapiens_backup.db
+/pyodbc.pyi
