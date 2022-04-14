@@ -1,9 +1,46 @@
-from codecs import xmlcharrefreplace_errors
+import configparser
 from datetime import datetime
-from pyexpat.model import XML_CQUANT_PLUS
 from zeep import Client, xsd
 
-def init():
+def setup():
+    config = configparser.ConfigParser()
+
+    # Tenta ler o arquivo de configurações.
+    try:
+        with open('config.ini') as config_file:
+            config.read_file(config_file)
+
+    # Caso não encontra o arquivo, fallback para criar um novo arquivo limpo.
+    # Detalhe, o aplicativo criará o arquivo, mas irá finalizar. Configure o arquivo e execute novamente.
+    except IOError:
+        print('Não rolou, criando um novo arquivo limpo')
+
+        config['sistema'] = {
+            'svrend': 'svr-erp2',
+            'svrprt': '8079',
+            'codusu': ' ',
+            'senusu': ' '
+        }
+
+        config['apontamento'] = {
+            'codemp': '1',
+            'codfil': ' ',
+            'codope': ' ',
+            'codori': ' ',
+            'numorp': ' ',
+            'codetg': ' ',
+            'seqrot': ' ',
+            'turtrb': ' ',
+            'codcre': ' '
+        }
+        with open('config.ini', 'w') as config_file:
+            config.write(config_file)
+        exit()
+
+def loop():
+    pass
+
+def apontar():
     cliente = Client('http://svr-erp2:8079/g5-senior-services/sapiens_Synccom_senior_g5_co_ger_sid?wsdl')
     tipo = cliente.get_type('ns0:sidExecutarIn')
     codusu = ''
@@ -19,9 +56,6 @@ def init():
     datmov = datetime.now().strftime('%d/%m/%Y')
     hormov = str(datetime.time(datetime.now()))
     qtdpro = '1000'
-
-    print(tipo)
-
     requisicao = []
     requisicao.append('acao=SID.Prd.ApontarOps')
     requisicao.append('CodEmp=' + codemp)
@@ -43,4 +77,4 @@ def init():
     print(resposta)
 
 if __name__ == '__main__':
-    init()
+    setup()
